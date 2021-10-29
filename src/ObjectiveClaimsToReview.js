@@ -1,39 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Grid, Button } from 'semantic-ui-react';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
-import { useSubstrate } from './substrate-lib';
+import React, { useEffect, useState } from 'react'
+import { Table, Grid, Button } from 'semantic-ui-react'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { useSubstrate } from './substrate-lib'
 
-export default function Main (props) {
-  const { api, keyring } = useSubstrate();
-  const accounts = keyring.getPairs();
-  const [balances, setBalances] = useState({});
+export default function Main(props) {
+  const { api, keyring } = useSubstrate()
+  const accounts = keyring.getPairs()
+  const [balances, setBalances] = useState({})
+  const [proposalHashes, setProposalHashes] = useState()
+  const [existingObjectiveClaimProposals, setExistingObjectiveClaimProposals] =
+    useState()
 
   useEffect(() => {
-    const addresses = keyring.getPairs().map(account => account.address);
-    let unsubscribeAll = null;
+    const addresses = keyring.getPairs().map(account => account.address)
+    let unsubscribeAll = null
 
     api.query.system.account
       .multi(addresses, balances => {
         const balancesMap = addresses.reduce(
           (acc, address, index) => ({
             ...acc,
-            [address]: balances[index].data.free.toHuman()
+            [address]: balances[index].data.free.toHuman(),
           }),
           {}
-        );
-        setBalances(balancesMap);
+        )
+        setBalances(balancesMap)
       })
       .then(unsub => {
-        unsubscribeAll = unsub;
+        unsubscribeAll = unsub
       })
-      .catch(console.error);
+      .catch(console.error)
 
-    return () => unsubscribeAll && unsubscribeAll();
-  }, [api, keyring, setBalances]);
+    return () => unsubscribeAll && unsubscribeAll()
+  }, [api, keyring, setBalances])
+
+  // if (api?.query?.committee?.proposals) {
+  api.query.committee
+    .proposals()
+    // first, get and set proposal hashes, those are needed to query the other storage items
+    .then(myStuff => {
+      const retrievedProposalHashes = myStuff.map(objectiveClaimSubmitted =>
+        objectiveClaimSubmitted.toHuman()
+      )
+      setProposalHashes(retrievedProposalHashes)
+    })
+    .catch(console.error)
+    .then()
+  // }
+
+  // api.query.committee.proposals
+  //   // .entries()
+  //   .then(stuff => console.log('stuff', stuff))
+  //   .catch(console.error)
+
+  // console.log(api.query.committee.proposalOf)
+  // console.log(api.query.committee.voting)
 
   return (
     <Grid.Column>
-      <h1>Balances</h1>
+      <h1>Objective Claims for Review</h1>
       <Table celled striped size="small">
         <Table.Body>
           <Table.Row>
@@ -77,5 +102,5 @@ export default function Main (props) {
         </Table.Body>
       </Table>
     </Grid.Column>
-  );
+  )
 }

@@ -33,7 +33,7 @@ export default function Main (props) {
 
   return (
     <Grid.Column>
-      <h1>Balances</h1>
+      <h1>Participants</h1>
       <Table celled striped size="small">
         <Table.Body>
           <Table.Row>
